@@ -1,0 +1,13 @@
+{
+  "name": "com.bitpatch.2d.character",
+  "version": "0.0.1",
+  "displayName": "Character 2D",
+  "description": "A 2D character controller for Unity.",
+  "unity": "2023.1",
+  "keywords": [
+    "2d",
+    "character",
+    "controller",
+    "platformer"
+  ]
+}
