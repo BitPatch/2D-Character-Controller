@@ -5,40 +5,42 @@ namespace Bitpatch.CharacterController
 {
     public class CharacterBody : MonoBehaviour
     {
-        [Tooltip("Specify the character's Rigidbody2D.")]
-        [SerializeField] private Rigidbody2D _rigidbody;
-        
+        [Tooltip("Specify the character's Rigidbody2D.")] [SerializeField]
+        private Rigidbody2D _rigidbody;
+
         [Tooltip("Determines the degree of influence of gravity on a character.")]
         [Min(0)]
-        [field: SerializeField] public float GravityFactor { get; private set; } = 1f;
-        
-        [Tooltip("Specify the layers that will be considered a solid surface.")]
-        [SerializeField] private LayerMask _solidLayers;
-        
-        [Tooltip("Maximum movement speed of the body.")]
-        [Min(0)]
-        [SerializeField] private float _maxSpeed = 30;
-        
+        [field: SerializeField]
+        public float GravityFactor { get; private set; } = 1f;
+
+        [Tooltip("Specify the layers that will be considered a solid surface.")] [SerializeField]
+        private LayerMask _solidLayers;
+
+        [Tooltip("Maximum movement speed of the body.")] [Min(0)] [SerializeField]
+        private float _maxSpeed = 30;
+
         [Tooltip("Specify the maximum distance from the ground at which a player will"
                  + " automatically be attracted to it and become grounded.")]
         [Min(0)]
-        [SerializeField] private float _surfaceAnchor = 0.05f;
-        
-        [Tooltip("The maximum angle of inclination on which a character can stand "
-                 + "firmly while maintaining the grounded state.")]
-        [Range(0, 90)]
-        [SerializeField] private float _maxSlop = 45f;
-        
-        [Tooltip("The current speed of the character.")]
-        [SerializeField] private Vector2 _velocity;
+        [SerializeField]
+        private float _surfaceAnchor = 0.1f;
 
-        [Tooltip("The current status of the character.")]
-        [field: SerializeField] private CharacterState _state;
-        
+        [Tooltip("When the velocity movement causes a contact with a Collider2D, a slide maybe occur if the surface " +
+                 "angle is less than this angle.")]
+        [Range(0, 90)]
+        [SerializeField]
+        private float _surfaceSlideAngle = 45f;
+
+        [Tooltip("The current speed of the character.")] [SerializeField]
+        private Vector2 _velocity;
+
+        [Tooltip("The current status of the character.")] [field: SerializeField]
+        private CharacterState _state;
+
         public Vector2 Velocity
         {
             get => _velocity;
-            
+
             set => _velocity = value.sqrMagnitude > _sqrMaxSpeed
                 ? value.normalized * _maxSpeed
                 : value;
@@ -58,10 +60,8 @@ namespace Bitpatch.CharacterController
                 }
             }
         }
-        
-        private float _sqrMaxSpeed;
 
-        private Rigidbody2D.SlideMovement _slideMovement;
+        private float _sqrMaxSpeed;
 
         private float _minGroundVertical;
 
@@ -77,28 +77,23 @@ namespace Bitpatch.CharacterController
         {
             Velocity = new Vector2(locomotionVelocity, _velocity.y);
         }
-        
+
         private void Awake()
         {
-            _minGroundVertical = Mathf.Cos(_maxSlop * Mathf.PI / 180f);
+            _minGroundVertical = Mathf.Cos(_surfaceSlideAngle * Mathf.PI / 180f);
             _sqrMaxSpeed = _maxSpeed * _maxSpeed;
-            _slideMovement = CreateSlideMovement();
         }
-        
+
         private void FixedUpdate()
         {
             Velocity += Time.fixedDeltaTime * GravityFactor * Physics2D.gravity;
-            
-            var slideResults = _rigidbody.Slide(
-                _velocity,
-                Time.fixedDeltaTime, 
-                _slideMovement);
+            var slideResults = _rigidbody.Slide(_velocity, Time.fixedDeltaTime, CreateSlideMovement());
 
             if (slideResults.slideHit)
             {
                 Velocity = ClipVector(_velocity, slideResults.slideHit.normal);
             }
-            
+
             if (_velocity.y <= 0 && slideResults.surfaceHit)
             {
                 var surfaceHit = slideResults.surfaceHit;
@@ -110,7 +105,7 @@ namespace Bitpatch.CharacterController
                     return;
                 }
             }
-            
+
             State = CharacterState.Airborne;
         }
 
@@ -120,7 +115,7 @@ namespace Bitpatch.CharacterController
             {
                 maxIterations = 3,
                 surfaceSlideAngle = 90,
-                gravitySlipAngle = 90,
+                gravitySlipAngle = _surfaceSlideAngle,
                 surfaceUp = Vector2.up,
                 surfaceAnchor = Vector2.down * _surfaceAnchor,
                 gravity = Vector2.zero,
@@ -128,7 +123,7 @@ namespace Bitpatch.CharacterController
                 useLayerMask = true,
             };
         }
-        
+
         private static Vector2 ClipVector(Vector2 vector, Vector2 hitNormal)
         {
             return vector - Vector2.Dot(vector, hitNormal) * hitNormal;
