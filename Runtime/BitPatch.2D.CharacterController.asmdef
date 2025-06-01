@@ -1,6 +1,6 @@
 {
     "name": "BitPatch.2D.CharacterController",
-    "rootNamespace": "",
+    "rootNamespace": "Bitpatch.CharacterController",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
